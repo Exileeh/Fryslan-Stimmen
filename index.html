@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stimmen Fryslân — stemgedrag Provinciale Staten</title>
+<meta name="description" content="Stemuitslagen van Provinciale Staten Fryslân per fractie, op basis van open data van Notubiz.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F6F3ED;
+    --paper-raised:#FBF9F5;
+    --ink:#1B2430;
+    --ink-muted:#6B6456;
+    --line:#D8D2C4;
+    --blue:#1D4E89;
+    --blue-soft:#E8EEF5;
+    --voor:#3F7D5C;
+    --voor-soft:#E6F0EA;
+    --tegen:#B23A2E;
+    --tegen-soft:#F6E7E5;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:15px;
+    line-height:1.5;
+  }
+  a{color:var(--blue)}
+
+  header{
+    border-bottom:1px solid var(--line);
+    padding:2.5rem 1.5rem 1.75rem;
+  }
+  .header-inner{max-width:1120px;margin:0 auto}
+  .eyebrow{
+    color:var(--ink-muted);
+    font-size:.8125rem;
+    margin:0 0 .5rem;
+  }
+  h1{
+    font-family:'Source Serif 4',Georgia,serif;
+    font-weight:600;
+    font-size:2.1rem;
+    margin:0 0 .5rem;
+    letter-spacing:-0.01em;
+  }
+  .lede{
+    max-width:52ch;
+    color:var(--ink-muted);
+    margin:0 0 1rem;
+  }
+  .meta{
+    font-size:.8125rem;
+    color:var(--ink-muted);
+    display:flex;
+    gap:1.25rem;
+    flex-wrap:wrap;
+  }
+  .meta b{color:var(--ink);font-weight:500}
+
+  main{max-width:1120px;margin:0 auto;padding:1.75rem 1.5rem 4rem}
+
+  .filters{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.75rem;
+    align-items:center;
+    padding:1rem;
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    margin-bottom:1.25rem;
+  }
+  .filters input[type=text],
+  .filters select{
+    font:inherit;
+    padding:.5rem .65rem;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink);
+  }
+  .filters input[type=text]{flex:1 1 220px;min-width:180px}
+  .filters label.check{
+    display:flex;align-items:center;gap:.4rem;
+    color:var(--ink-muted);font-size:.875rem;white-space:nowrap;
+  }
+  .spacer{flex:1 1 auto}
+  button{
+    font:inherit;
+    cursor:pointer;
+    border:1px solid var(--blue);
+    background:var(--blue);
+    color:#fff;
+    padding:.5rem .9rem;
+  }
+  button:hover{background:#163f6f}
+  button.ghost{
+    background:transparent;color:var(--blue);
+  }
+  button.ghost:hover{background:var(--blue-soft)}
+
+  .table-wrap{
+    border:1px solid var(--line);
+    overflow-x:auto;
+    background:var(--paper-raised);
+  }
+  table{border-collapse:collapse;width:100%;font-size:.875rem}
+  thead th{
+    position:sticky;top:0;
+    background:var(--paper-raised);
+    border-bottom:1px solid var(--line);
+    text-align:left;
+    padding:.6rem .7rem;
+    font-weight:500;
+    color:var(--ink-muted);
+    white-space:nowrap;
+  }
+  thead th.party{text-align:center}
+  tbody td{
+    padding:.6rem .7rem;
+    border-bottom:1px solid var(--line);
+    vertical-align:top;
+  }
+  tbody tr:hover td{background:var(--blue-soft)}
+  td.date{white-space:nowrap;color:var(--ink-muted)}
+  td.title{max-width:34ch}
+  td.title .sub{color:var(--ink-muted);font-size:.8125rem;display:block;margin-top:.15rem}
+  td.result{white-space:nowrap}
+  td.party{text-align:center;font-weight:600}
+  .tag{
+    display:inline-block;
+    font-size:.75rem;
+    padding:.1rem .45rem;
+    border:1px solid var(--line);
+    color:var(--ink-muted);
+  }
+  .cell-v{color:var(--voor);background:var(--voor-soft)}
+  .cell-t{color:var(--tegen);background:var(--tegen-soft)}
+  .cell-o{color:var(--ink-muted)}
+  .result-aangenomen{color:var(--voor)}
+  .result-verworpen{color:var(--tegen)}
+
+  .empty,.loading{padding:3rem 1rem;text-align:center;color:var(--ink-muted)}
+
+  footer{
+    max-width:1120px;margin:0 auto;padding:1.5rem 1.5rem 3rem;
+    color:var(--ink-muted);font-size:.8125rem;
+    border-top:1px solid var(--line);
+  }
+
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#171A1F; --paper-raised:#1E222A; --ink:#EDEAE2; --ink-muted:#9B968A;
+      --line:#33384880; --blue:#6C9BD1; --blue-soft:#1E2A3A;
+      --voor:#7CC6A0; --voor-soft:#1B2C24; --tegen:#E39187; --tegen-soft:#2E1E1C;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#171A1F; --paper-raised:#1E222A; --ink:#EDEAE2; --ink-muted:#9B968A;
+    --line:#333848; --blue:#6C9BD1; --blue-soft:#1E2A3A;
+    --voor:#7CC6A0; --voor-soft:#1B2C24; --tegen:#E39187; --tegen-soft:#2E1E1C;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <p class="eyebrow">Provinciale Staten Fryslân · open data</p>
+    <h1>Stimmen Fryslân</h1>
+    <p class="lede">Hoe elke fractie stemde op moties, amendementen en besluiten — rechtstreeks uit de open data van de Fryske Steategriffy.</p>
+    <p class="meta" id="meta">Data wordt geladen…</p>
+  </div>
+</header>
+
+<main>
+  <div class="filters">
+    <input type="text" id="q" placeholder="Zoek op onderwerp…">
+    <select id="type">
+      <option value="">Alle typen</option>
+      <option value="motie">Moasjes</option>
+      <option value="amendement">Amendeminten</option>
+      <option value="besluit">Besluiten</option>
+    </select>
+    <select id="uitslag">
+      <option value="">Alle uitslagen</option>
+      <option value="aangenomen">Aangenomen</option>
+      <option value="verworpen">Verworpen</option>
+    </select>
+    <label class="check"><input type="checkbox" id="omstreden"> Alleen omstreden</label>
+    <div class="spacer"></div>
+    <button class="ghost" id="download">CSV van deze selectie ⇣</button>
+  </div>
+
+  <div class="table-wrap">
+    <div id="loading" class="loading">Stemmingen laden…</div>
+    <table id="tbl" style="display:none">
+      <thead><tr id="thead-row"></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div id="empty" class="empty" style="display:none">Geen stemmingen gevonden met deze filters.</div>
+  </div>
+</main>
+
+<footer>
+  <p><strong>Wat is dit?</strong> V (voor) of T (tegen) is de meerderheid van de fractie; een lege cel betekent dat de fractie niet meedeed aan die stemming. Beweeg over een cel voor de exacte aantallen.</p>
+  <p>Bron: <a href="https://fryslan.notubiz.nl" target="_blank" rel="noopener">fryslan.notubiz.nl</a> (open data van de Steategriffy). Dit is een hergebruik-project van een particulier, geen officiële uitgave van de provincie.</p>
+</footer>
+
+<script>
+(async function(){
+  const state = { votings: [], parties: [] };
+
+  function fmtDatum(iso){
+    if(!iso) return '';
+    const [y,m,d] = iso.split('-');
+    return d + '-' + m + '-' + y;
+  }
+
+  function omstreden(row){
+    let voor=0, tegen=0;
+    for(const p of state.parties){
+      const c = row.fracties[p];
+      if(!c) continue;
+      if(c.voor > c.tegen) voor++;
+      else if(c.tegen > c.voor) tegen++;
+    }
+    return voor>0 && tegen>0;
+  }
+
+  function render(){
+    const q = document.getElementById('q').value.trim().toLowerCase();
+    const type = document.getElementById('type').value;
+    const uitslag = document.getElementById('uitslag').value;
+    const onlyOmstreden = document.getElementById('omstreden').checked;
+
+    const rows = state.votings.filter(r=>{
+      if(type && r.type !== type) return false;
+      if(uitslag && r.uitslag !== uitslag) return false;
+      if(q && !(r.titel||'').toLowerCase().includes(q)) return false;
+      if(onlyOmstreden && !omstreden(r)) return false;
+      return true;
+    });
+
+    const thead = document.getElementById('thead-row');
+    thead.innerHTML = '<th>Datum</th><th>Onderwerp</th><th>Uitslag</th>' +
+      state.parties.map(p=>'<th class="party">'+esc(p)+'</th>').join('');
+
+    const tbody = document.getElementById('tbody');
+    tbody.innerHTML = rows.map(r=>{
+      const cells = state.parties.map(p=>{
+        const c = r.fracties[p];
+        if(!c) return '<td class="party"></td>';
+        let cls='cell-o', letter='O';
+        if(c.voor>c.tegen){cls='cell-v';letter='V';}
+        else if(c.tegen>c.voor){cls='cell-t';letter='T';}
+        return '<td class="party '+cls+'" title="'+p+': '+c.voor+' voor, '+c.tegen+' tegen">'+letter+'</td>';
+      }).join('');
+      return '<tr>'+
+        '<td class="date">'+fmtDatum(r.datum)+'</td>'+
+        '<td class="title">'+esc(r.titel||'(zonder titel)')+
+          '<span class="sub">'+esc(r.vergadering||'')+'</span></td>'+
+        '<td class="result"><span class="tag result-'+esc(r.uitslag)+'">'+esc(r.uitslag||'—')+'</span></td>'+
+        cells+
+        '</tr>';
+    }).join('');
+
+    document.getElementById('tbl').style.display = rows.length ? 'table' : 'none';
+    document.getElementById('empty').style.display = rows.length ? 'none' : 'block';
+    document.getElementById('loading').style.display = 'none';
+
+    state._filtered = rows;
+  }
+
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function toCSV(){
+    const header = ['datum','onderwerp','type','uitslag', ...state.parties];
+    const lines = [header.join(';')];
+    for(const r of state._filtered || []){
+      const cells = state.parties.map(p=>{
+        const c = r.fracties[p];
+        if(!c) return '';
+        if(c.voor>c.tegen) return 'V ('+c.voor+'-'+c.tegen+')';
+        if(c.tegen>c.voor) return 'T ('+c.voor+'-'+c.tegen+')';
+        return 'O ('+c.voor+'-'+c.tegen+')';
+      });
+      const row = [r.datum, '"'+(r.titel||'').replace(/"/g,'""')+'"', r.type||'', r.uitslag||'', ...cells];
+      lines.push(row.join(';'));
+    }
+    return lines.join('\r\n');
+  }
+
+  document.getElementById('download').addEventListener('click', ()=>{
+    const blob = new Blob(['\uFEFF'+toCSV()], {type:'text/csv;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'stimmen-fryslan.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  ['q','type','uitslag','omstreden'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', render);
+    document.getElementById(id).addEventListener('change', render);
+  });
+
+  try{
+    const res = await fetch('data/fryslan.json', {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    state.votings = data.votings || [];
+
+    const partySet = new Set();
+    state.votings.forEach(r => Object.keys(r.fracties||{}).forEach(p=>partySet.add(p)));
+    state.parties = Array.from(partySet).sort();
+
+    const gen = data.generated_at ? new Date(data.generated_at).toLocaleString('nl-NL') : '—';
+    document.getElementById('meta').innerHTML =
+      '<span>Bijgewerkt op <b>'+esc(gen)+'</b></span>' +
+      '<span><b>'+state.votings.length+'</b> stemmingen sinds '+esc(data.van||'')+'</span>' +
+      '<span><b>'+state.parties.length+'</b> fracties</span>';
+
+    render();
+  }catch(e){
+    document.getElementById('loading').textContent =
+      'Kon data/fryslan.json niet laden. Bekijk deze pagina via een server (niet door het bestand te openen), en controleer of de collector al gedraaid heeft.';
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>
