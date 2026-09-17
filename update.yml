@@ -1,0 +1,31 @@
+name: Ververs stemdata
+
+on:
+  schedule:
+    # elke maandag 04:00 UTC — zelfde wekelijkse frequentie als het origineel
+    - cron: '0 4 * * 1'
+  workflow_dispatch: {}   # handmatig starten via het Actions-tabblad
+
+permissions:
+  contents: write
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Data ophalen bij Notubiz
+        run: python3 collector.py
+
+      - name: Wijziging committen (alleen als er iets veranderde)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/fryslan.json
+          git diff --staged --quiet || git commit -m "Ververs stemdata Fryslân"
+          git push
